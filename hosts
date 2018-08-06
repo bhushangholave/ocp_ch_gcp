@@ -1,0 +1,143 @@
+[OSEv3:vars]
+#########################################################################################################################################################################################
+####### Ansible Vars
+###########################################################################################################################################################################################
+timeout=60
+ansible_become=yes
+ansible_become=True
+##
+####################################################################################################################################################################################
+##### Openshift Basic Vars
+####################################################################################################################################################################################################
+deployment_type=openshift-enterprise
+openshift_release=v3.9
+os_firewall_use_firewalld=True
+openshift_clock_enabled=true
+containerized=false
+openshift_disable_check="memory_availability"
+openshift_disable_check=disk_availability
+openshift_cloudprovider_kind=gce
+openshift_gcp_project=refarch-211209
+openshift_gcp_prefix=refarch
+# If deploying single zone cluster set to "False"
+openshift_gcp_multizone="True"
+openshift_gcp_network_name=refarch-net
+
+
+################################################################################################################################################################################################################ Op####OpenShift Master Vars
+####################################################################################################################################################################################################################
+openshift_master_api_port=443
+openshift_master_console_port=443
+
+#########openshift_node_local_quota_per_fsgroup=512Mi
+
+openshift_hosted_registry_replicas=1
+openshift_hosted_registry_storage_kind=object
+openshift_hosted_registry_storage_provider=gcs
+openshift_hosted_registry_storage_gcs_bucket=refarch-registry-ocpch
+
+openshift_master_cluster_method=native
+#openshift_master_cluster_hostname=35.190.44.103
+#openshift_master_cluster_public_hostname=35.190.44.103
+#openshift_master_default_subdomain=35.185.240.226
+
+openshift_master_cluster_hostname=refarch-ocp.internal.cloudhedge.io
+openshift_master_cluster_public_hostname=refarch-ocp.internal.cloudhedge.io
+openshift_master_default_subdomain=refarch-apps.internal.cloudhedge.io
+
+#
+####################################################################################################################################################################################################
+#####Openshift Network Vars
+###################################################################################################################################################################################################
+
+os_sdn_network_plugin_name=redhat/openshift-ovs-networkpolicy
+
+#deployment_type=openshift-enterprise
+
+#
+####################################################################################################################################################################################################
+#####Openshift Authentication Vars
+###################################################################################################################################################################################################
+
+####openshift_master_identity_providers=[{'name': 'google', 'challenge': 'false', 'login': 'true', 'kind': 'GoogleIdentityProvider', 'mapping_method': 'claim', 'clientID': '573993671639-bheo0rc3ql6jhv6af4tmo7v0l5fb7hka.apps.googleusercontent.com', 'clientSecret': 'xtbPLYFckMaUrIIIqfZH8IaQ', 'hostedDomain': 'redhat.com'}]
+
+openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/origin/master/htpasswd'}]
+openshift_master_htpasswd_users={'admin': '$apr1$So7O7QBS$bZ2NQ49Yye7yfzYrx5sTN/', 'bhushan': '$apr1$YdteXK0M$pXooYWPbM52uzchpu39x50' }
+#opeshift_master_htpasswd_file=/root/htpasswd.openshift
+#
+####################################################################################################################################################################################################
+#####Openshift Router and Registry Vars
+###################################################################################################################################################################################################
+
+# Required per https://access.redhat.com/solutions/3480921
+oreg_url=registry.access.redhat.com/openshift3/ose-${component}:${version}
+openshift_examples_modify_imagestreams=true
+openshift_storage_glusterfs_image=registry.access.redhat.com/rhgs3/rhgs-server-rhel7
+openshift_storage_glusterfs_block_image=registry.access.redhat.com/rhgs3/rhgs-gluster-block-prov-rhel7
+openshift_storage_glusterfs_s3_image=registry.access.redhat.com/rhgs3/rhgs-s3-server-rhel7
+openshift_storage_glusterfs_heketi_image=registry.access.redhat.com/rhgs3/rhgs-volmanager-rhel7
+
+#
+####################################################################################################################################################################################################
+#####Openshift Service Catlog Vars
+###################################################################################################################################################################################################
+#
+# Service catalog
+openshift_hosted_etcd_storage_kind=dynamic
+openshift_hosted_etcd_storage_volume_name=etcd-vol
+openshift_hosted_etcd_storage_access_modes=["ReadWriteOnce"]
+openshift_hosted_etcd_storage_volume_size=1G
+openshift_hosted_etcd_storage_labels={'storage': 'etcd'}
+
+#
+####################################################################################################################################################################################################
+#####Openshift Metrics and Logging Vars
+###################################################################################################################################################################################################
+
+# Metrics
+openshift_metrics_install_metrics=true
+openshift_metrics_cassandra_storage_type=dynamic
+openshift_metrics_storage_volume_size=20Gi
+openshift_metrics_cassandra_nodeselector={"region":"infra"}
+openshift_metrics_hawkular_nodeselector={"region":"infra"}
+openshift_metrics_heapster_nodeselector={"region":"infra"}
+
+# Aggregated logging
+openshift_logging_install_logging=true
+openshift_logging_es_pvc_dynamic=true
+openshift_logging_es_pvc_size=100Gi
+openshift_logging_es_cluster_size=3
+openshift_logging_es_nodeselector={"region":"infra"}
+openshift_logging_kibana_nodeselector={"region":"infra"}
+openshift_logging_curator_nodeselector={"region":"infra"}
+openshift_logging_es_number_of_replicas=1
+
+############################################################################################################################################################################################################
+######Openshift Hosts
+###################################################################################################################################################################################################
+[OSEv3:children]
+masters
+etcd
+nodes
+
+[masters]
+refarch-master-0
+refarch-master-1
+refarch-master-2
+
+[etcd]
+refarch-master-0
+refarch-master-1
+refarch-master-2
+
+[nodes]
+refarch-master-0 openshift_node_labels="{'region': 'master'}"
+refarch-master-1 openshift_node_labels="{'region': 'master'}"
+refarch-master-2 openshift_node_labels="{'region': 'master'}"
+refarch-infra-0 openshift_node_labels="{'region': 'infra', 'node-role.kubernetes.io/infra': 'true'}"
+refarch-infra-1 openshift_node_labels="{'region': 'infra', 'node-role.kubernetes.io/infra': 'true'}"
+#refarch-infra-2 openshift_node_labels="{'region': 'infra', 'node-role.kubernetes.io/infra': 'true'}"
+refarch-app-0 openshift_node_labels="{'region': 'apps'}"
+refarch-app-1 openshift_node_labels="{'region': 'apps'}"
+#refarch-app-2 openshift_node_labels="{'region': 'apps'}"
+
